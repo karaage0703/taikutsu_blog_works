@@ -167,7 +167,7 @@ def get_timestamps(args, url, name):
     """ 
     plt.figure()
     data = request.urlopen("http://b.hatena.ne.jp/entry/json/{}".format(url)).read().decode("utf-8")
-    info = json.loads(data.strip('(').rstrip(')'), "r")
+    info = json.loads(data.strip('(').rstrip(')'))
     timestamps = list()
     if info != None and "bookmarks" in info.keys(): # 公開ブックマークが存在する時に、それらの情報を抽出
         bookmarks=info["bookmarks"]
@@ -259,7 +259,7 @@ def main():
             soup = BeautifulSoup(html, "html.parser")
             # WordPressならいらない
             data = request.urlopen("http://b.hatena.ne.jp/entry/json/{}".format(url)).read().decode("utf-8")        
-            info = json.loads(data.strip('(').rstrip(')'), "r")
+            info = json.loads(data.strip('(').rstrip(')'))
             try:
                 count = info["count"]
             except TypeError:

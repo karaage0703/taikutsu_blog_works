@@ -88,3 +88,8 @@ python all_in_one.py -u http://procrasist.com -d procrasist -g -i -b -l
 - はてブ初動解析は、非公開の人のはてブは反映されていないので、実際よりも少ない
 - 特にURLのぶっこ抜きに関しては、はてなブログ用にハードコーディングしている
     - はてなブログじゃない人は、連絡ください。余裕があれば対応します。
+
+### Authors
+- [hokekiyo](https://github.com/hokekiyoo) (all-in-one.py / modules)
+- [Dai Kawai](https://twitter.com/never_be_a_pm) (hatebu_analysis.ipynb)
+- karaage (hatebu_analysis.ipynb)

@@ -1,5 +1,4 @@
 *.png
-*.csv
 *.gml
 .ipynb_checkpoints
 .DS_Store

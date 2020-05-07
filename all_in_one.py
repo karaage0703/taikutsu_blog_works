@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from urllib import request 
+from urllib import request
 from urllib import error
 from bs4 import BeautifulSoup
 import os
@@ -13,14 +13,14 @@ def extract_urls(args):
     page = 1
     is_articles = True
     urls = []
-    while is_articles:
+    while is_articles and page <= args.number:
         try:
             html = request.urlopen("{}/archive?page={}".format(args.url, page))
-        except error.HTTPError as e: 
+        except error.HTTPError as e:
             # HTTPレスポンスのステータスコードが404, 403, 401などの例外処理
             print(e.reason)
             break
-        except error.URLError as e: 
+        except error.URLError as e:
             # アクセスしようとしたurlが無効なときの例外処理
             print(e.reason)
             break
@@ -61,7 +61,7 @@ def articles_to_img(args, url, soup, name):
         os.mkdir(article_dir)
     entry = soup.select(".entry-content")[0]
     imgs = entry.find_all("img")
-    count=0
+    count = 0
     for img in imgs:
         filename = img.get("src")
         if "ssl-images-amazon" in filename:
@@ -74,25 +74,25 @@ def articles_to_img(args, url, soup, name):
         elif filename[-5:] == ".jpeg":
             extension = filename[-5:]
             print("\t IMAGE:",filename,extension)
-        else: 
+        else:
             continue
         try:
             image_file = request.urlopen(filename)
-        except error.HTTPError as e: 
+        except error.HTTPError as e:
             print("\t HTTPERROR:", e.reason)
             continue
-        except error.URLError as e: 
+        except error.URLError as e:
             print("\t URLERROR:", e.reson)
             continue
         # ValueErrorになった場合に試す(httpで始まらないリンクも貼れるっぽい？)
         except ValueError:
             http_file = "http:"+filename
-            try: 
+            try:
                 image_file = request.urlopen(http_file)
-            except error.HTTPError as e: 
+            except error.HTTPError as e:
                 print("\t HTTPERROR:", e.reason)
                 continue
-            except error.URLError as e: 
+            except error.URLError as e:
                 print("\t URLERROR:", e.reason)
                 continue
         # 画像ファイルの保存
@@ -112,14 +112,14 @@ def make_network(G, args, url, urls, soup):
             print("\t NETWORK: 被リンク！{} -> {}".format(article_name, linked_article_name))
             j = urls.index(l)
             G.add_edge(article_name, linked_article_name)
-        else: 
+        else:
             continue
 
 def url_checker(url, urls):
     #変なリンクは除去したい
-    flag1 = "http" in url[:5]     
+    flag1 = "http" in url[:5]
     #ハテナのキーワードのリンクはいらない
-    flag2 = "d.hatena.ne.jp/keyword/" not in url    
+    flag2 = "d.hatena.ne.jp/keyword/" not in url
     #amazonリンクはダメ
     flag3 = "http://www.amazon.co.jp" not in url and "http://amzn.to/" not in url
     #rakutenリンクはダメ
@@ -132,7 +132,7 @@ def url_checker(url, urls):
 def check_invalid_link(args, urls, url, soup, writer):
     import re
     from urllib.parse import quote_plus
-    regex = r'[^\x00-\x7F]' #正規表現    
+    regex = r'[^\x00-\x7F]' #正規表現
     entry_url = args.url + "/entry/"
     entry = soup.select(".entry-content")[0]
     links = entry.find_all("a")
@@ -153,8 +153,8 @@ def check_invalid_link(args, urls, url, soup, writer):
                 print("\t HTTPError:", l, e.reason)
                 if e.reason != "Forbidden":
                     writer.writerow([url,  e.reason, l])
-            except error.URLError as e: 
-                writer.writerow([url, e.reason, l])                        
+            except error.URLError as e:
+                writer.writerow([url, e.reason, l])
                 print("\t URLError:", l, e.reason)
             except TimeoutError as e:
                 print("\t TimeoutError:",l, e)
@@ -164,7 +164,7 @@ def check_invalid_link(args, urls, url, soup, writer):
 def get_timestamps(args, url, name):
     """
     はてブのタイムスタンプを取得
-    """ 
+    """
     plt.figure()
     data = request.urlopen("http://b.hatena.ne.jp/entry/json/{}".format(url)).read().decode("utf-8")
     info = json.loads(data.strip('(').rstrip(')'))
@@ -176,7 +176,7 @@ def get_timestamps(args, url, name):
             timestamp = datetime.datetime.strptime(bookmark["timestamp"],'%Y/%m/%d %H:%M:%S')
             timestamps.append(timestamp)
         timestamps = list(reversed(timestamps)) # ブックマークされた時間を保存しておく
-    count = len(timestamps) 
+    count = len(timestamps)
     number = range(count)
     if(count!=0):
         first = timestamps[0]
@@ -188,7 +188,7 @@ def get_timestamps(args, url, name):
         plt.axvspan(first+datetime.timedelta(hours=3),first+datetime.timedelta(hours=12),alpha=0.1,color="green")
         plt.plot([first,first+datetime.timedelta(days=2)],[15,15],"--",alpha=0.9, color="green",label="popular entry")
         # ホッテントリ
-        plt.plot([first,first+datetime.timedelta(days=2)],[15,15],"--",alpha=0.7, color="red",label="hotentry")        
+        plt.plot([first,first+datetime.timedelta(days=2)],[15,15],"--",alpha=0.7, color="red",label="hotentry")
         plt.xlim(first,first+datetime.timedelta(days=2))
         plt.title(name)
         plt.xlabel("First Hatebu : {}".format(first))
@@ -203,30 +203,31 @@ def graph_visualize(G, args):
     pos = nx.spring_layout(G)
     # グラフ描画。 オプションでノードのラベル付きにしている
     plt.figure()
-    nx.draw_networkx(G, pos, with_labels=False, alpha=0.4,font_size=0.0,node_size=10) 
+    nx.draw_networkx(G, pos, with_labels=False, alpha=0.4,font_size=0.0,node_size=10)
     plt.savefig(args.directory+"/graph/graph.png")
     nx.write_gml(G, args.directory+"/graph/graph.gml")
     # 次数分布描画
-    plt.figure() 
-    degree_sequence=sorted(nx.degree(G).values(),reverse=True) 
-    dmax=max(degree_sequence) 
+    plt.figure()
+    degree_sequence=sorted(nx.degree(G).values(),reverse=True)
+    dmax=max(degree_sequence)
     dmin =min(degree_sequence)
-    kukan=range(0,dmax+2) 
+    kukan=range(0,dmax+2)
     hist, kukan=np.histogram(degree_sequence,kukan)
     plt.plot(hist,"o-")
-    plt.xlabel('degree') 
+    plt.xlabel('degree')
     plt.ylabel('frequency')
     plt.grid()
-    plt.savefig(args.directory+'/graph/degree_hist.png') 
-    
+    plt.savefig(args.directory+'/graph/degree_hist.png')
+
 def main():
     parser = ArgumentParser()
     parser.add_argument("-u", "--url", type=str, required=True,help="input your url")
+    parser.add_argument("-n", "--number", type=int, default=100, help="input max article number")
     parser.add_argument("-d", "--directory", type=str, required=True,help="output directory")
     parser.add_argument("-i", "--image", action="store_true", default=False, help="extract image file from articles")
     parser.add_argument("-g", "--graph", action="store_true", default=False, help="visualize internal link network")
     parser.add_argument("-l", "--invalid_url", action="store_true", default=False, help="detect invalid links")
-    parser.add_argument("-b", "--hatebu", action="store_true", default=False, help="visualize analyzed hatebu graph")   
+    parser.add_argument("-b", "--hatebu", action="store_true", default=False, help="visualize analyzed hatebu graph")
     args = parser.parse_args()
 
     urls = extract_urls(args)
@@ -239,7 +240,7 @@ def main():
         if args.invalid_url:
             f = open(args.directory+'/invalid_url_list.csv', 'w')
             writer_invalid = csv.writer(f, lineterminator='\n')
-            writer_invalid.writerow(["Article URL", "ERROR", "LINK"])        
+            writer_invalid.writerow(["Article URL", "ERROR", "LINK"])
         if args.graph:
             import networkx as nx
             G = nx.Graph()
@@ -252,13 +253,13 @@ def main():
             # 抽出したurlに対して各処理実行
             try:
                 html = request.urlopen(url)
-            except error.HTTPError as e: 
+            except error.HTTPError as e:
                 print(e.reason)
-            except error.URLError as e: 
+            except error.URLError as e:
                 print(e.reason)
             soup = BeautifulSoup(html, "html.parser")
             # WordPressならいらない
-            data = request.urlopen("http://b.hatena.ne.jp/entry/json/{}".format(url)).read().decode("utf-8")        
+            data = request.urlopen("http://b.hatena.ne.jp/entry/json/{}".format(url)).read().decode("utf-8")
             info = json.loads(data.strip('(').rstrip(')'))
             try:
                 count = info["count"]
